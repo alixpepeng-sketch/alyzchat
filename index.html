@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#ffffff">
+<title>Alyz Project Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="/api/env.js"></script>
+</head>
+<body>
+
+<div id="splash" class="splash">
+  <div class="logo">AL</div>
+  <h1 class="splash-title">Alyz Project Tools</h1>
+  <p id="splashSub" class="splash-sub" hidden>menyiapkan web in proses...</p>
+  <div class="bar"><i id="barFill"></i></div>
+  <span id="pct" class="pct">0%</span>
+</div>
+
+<section id="login" class="screen center" hidden>
+  <div class="card login-card">
+    <div class="logo small">AL</div>
+    <h2>MASUK</h2>
+    <label class="lbl">NOMOR TELEPON</label>
+    <div class="phone-row">
+      <div class="cc">+62</div>
+      <input id="phoneInput" type="tel" inputmode="numeric" maxlength="13" placeholder="8XX-XXXX-XXXX" autocomplete="tel-national">
+    </div>
+    <button id="sendBtn" class="btn">KIRIM OTP</button>
+    <div id="otpBox" hidden>
+      <label class="lbl">KODE OTP</label>
+      <input id="otpInput" class="full" type="text" inputmode="numeric" maxlength="6" placeholder="------" autocomplete="one-time-code">
+      <button id="verifyBtn" class="btn">VERIFIKASI</button>
+    </div>
+    <p id="loginMsg" class="msg"></p>
+    <div id="recaptcha-container"></div>
+  </div>
+</section>
+
+<section id="home" class="screen col" hidden>
+  <header class="topbar">
+    <button id="addBtn" class="round" aria-label="Tambah kontak">+</button>
+    <span id="myPhone" class="myphone"></span>
+  </header>
+  <main class="content">
+    <div id="tabChat">
+      <div id="contactList"></div>
+      <p id="emptyText" class="empty" hidden>BELUM ADA KONTAK</p>
+    </div>
+    <div id="tabProfile" hidden>
+      <div class="profile">
+        <button id="avatarBtn" class="avatar-xl" aria-label="Ganti foto"></button>
+        <input id="fileInput" type="file" accept="image/*" hidden>
+        <label class="lbl">USERNAME</label>
+        <input id="nameInput" class="full" type="text" maxlength="24" placeholder="Username">
+        <label class="lbl">NOMOR LOGIN</label>
+        <input id="phoneShow" class="full" type="text" disabled>
+        <button id="saveBtn" class="btn">SIMPAN PROFILE</button>
+        <button id="logoutBtn" class="btn invert">LOG OUT</button>
+        <p id="profMsg" class="msg"></p>
+      </div>
+    </div>
+  </main>
+  <nav class="bottom">
+    <button id="navChat" class="active">CHAT</button>
+    <button id="navProfile">PROFIL</button>
+  </nav>
+</section>
+
+<section id="chat" class="chat">
+  <header class="chat-head">
+    <button id="backBtn" class="round" aria-label="Kembali">&lt;</button>
+    <div id="chatAvatar" class="avatar"></div>
+    <div class="chat-id"><b id="chatName"></b><span id="chatNum"></span></div>
+    <button id="dotsBtn" class="dots" aria-label="Menu"><i></i><i></i><i></i></button>
+    <div id="menu" class="menu" hidden>
+      <button id="mBlock">Blokir Kontak</button>
+      <button id="mClear">Hapus Chat</button>
+      <button id="mDel">Hapus Kontak</button>
+    </div>
+  </header>
+  <div id="msgs" class="msgs"></div>
+  <div class="inputbar">
+    <textarea id="msgInput" rows="1" placeholder="Ketik pesan"></textarea>
+    <button id="sendMsg" class="send" aria-label="Kirim"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="square"><path d="M12 20V5M5 11l7-7 7 7"/></svg></button>
+  </div>
+</section>
+
+<div id="modal" class="modal" hidden>
+  <div class="card modal-card">
+    <h2>TAMBAH KONTAK</h2>
+    <input id="contactInput" class="full" type="tel" inputmode="numeric" maxlength="15" placeholder="628xxxxxxxxxx">
+    <p id="modalMsg" class="msg"></p>
+    <div class="row">
+      <button id="modalCancel" class="btn invert">BATAL</button>
+      <button id="modalSave" class="btn">SIMPAN</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
