@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // nomor login tanpa tanda +, contoh "628123456789"
+    function me() {
+      return request.auth.token.phone_number.replace('\\+', '');
+    }
+
+    match /messages/{id} {
+      allow read: if request.auth != null && me() in resource.data.participants;
+
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['chatId','sender','receiver','participants','text','ts'])
+        && request.resource.data.sender == me()
+        && request.resource.data.receiver is string
+        && request.resource.data.participants == [request.resource.data.sender, request.resource.data.receiver]
+        && request.resource.data.chatId in [
+             request.resource.data.sender + '_' + request.resource.data.receiver,
+             request.resource.data.receiver + '_' + request.resource.data.sender
+           ]
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000
+        && request.resource.data.ts == request.time;
+
+      allow delete: if request.auth != null
+        && me() in resource.data.participants;
+
+      allow update: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
