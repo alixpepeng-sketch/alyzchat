@@ -5,21 +5,45 @@ const $ = id => document.getElementById(id);
 const LS = localStorage;
 let phone = LS.getItem("alyz_phone");
 let current = null, unsub = null, blockedNow = false;
-const setMsg = (el, t) => { $(el).textContent = t; };
+const setMsg = (el, t) => { const e=$(el); if(e) e.textContent = t; };
 
-/* ---------- Splash ---------- */
+/* ---------- Splash FIX 100% JALAN ---------- */
 function runSplash(withSub, showNext) {
   const sp = $("splash");
-  sp.style.transition = "none"; sp.classList.remove("hide"); void sp.offsetWidth; sp.style.transition = "";
-  $("splashSub").hidden = !withSub;
+  const fill = $("barFill");
+  const pct = $("pct");
+  const sub = $("splashSub");
+  if(!sp ||!fill ||!pct) {
+    if(showNext) showNext();
+    return Promise.resolve();
+  }
+  sp.style.transition = "none";
+  sp.classList.remove("hide");
+  void sp.offsetWidth;
+  sp.style.transition = "";
+  sub.hidden =!withSub;
+  fill.style.width = "0%";
+  pct.textContent = "0%";
+
   return new Promise(res => {
-    const dur = 2400, t0 = performance.now();
-    (function tick(t) {
-      const p = Math.max(0, Math.min(100, Math.round(((t - t0) / dur) * 100)));
-      $("barFill").style.width = p + "%"; $("pct").textContent = p + "%";
-      if (p < 100) return requestAnimationFrame(tick);
-      setTimeout(() => { showNext(); sp.classList.add("hide"); res(); }, 250);
-    })(t0);
+    let p = 0;
+    const iv = setInterval(()=>{
+      p += Math.floor(Math.random()*12)+5;
+      if(p >= 100){
+        p = 100;
+        clearInterval(iv);
+        fill.style.width = "100%";
+        pct.textContent = "100%";
+        setTimeout(() => {
+          if(showNext) showNext();
+          sp.classList.add("hide");
+          res();
+        }, 300);
+        return;
+      }
+      fill.style.width = p + "%";
+      pct.textContent = p + "%";
+    }, 70);
   });
 }
 
@@ -63,6 +87,7 @@ $("verifyBtn").onclick = async () => {
 const userName = c => "User" + c.n;
 function renderContacts() {
   const list = getContacts(phone), box = $("contactList");
+  if(!box) return;
   box.innerHTML = ""; $("emptyText").hidden = list.length > 0;
   list.forEach(c => {
     const b = document.createElement("button"); b.className = "contact";
@@ -91,21 +116,21 @@ function openChat(c) {
   unsub && unsub();
   unsub = listenMessages(phone, c.phone, renderMessages, e => {
     $("msgs").innerHTML = ""; const p = document.createElement("p"); p.className = "empty";
-    p.textContent = e.code === "failed-precondition" ? "BUAT INDEX FIRESTORE (LIHAT CONSOLE)" : "GAGAL MEMUAT CHAT";
+    p.textContent = e.code === "failed-precondition"? "BUAT INDEX FIRESTORE (LIHAT CONSOLE)" : "GAGAL MEMUAT CHAT";
     $("msgs").appendChild(p); console.error(e);
   });
 }
 function closeChat() { $("chat").classList.remove("open"); unsub && unsub(); unsub = null; current = null; $("menu").hidden = true; }
 function updateBlockUI() {
-  $("mBlock").textContent = blockedNow ? "Buka Blokir" : "Blokir Kontak";
-  $("msgInput").disabled = blockedNow; $("msgInput").placeholder = blockedNow ? "Kontak diblokir" : "Ketik pesan";
+  $("mBlock").textContent = blockedNow? "Buka Blokir" : "Blokir Kontak";
+  $("msgInput").disabled = blockedNow; $("msgInput").placeholder = blockedNow? "Kontak diblokir" : "Ketik pesan";
 }
 function renderMessages(msgs) {
   const box = $("msgs");
   box.innerHTML = "";
-  msgs.filter(m => !(blockedNow && m.sender !== phone)).forEach(m => {
+  msgs.filter(m =>!(blockedNow && m.sender!== phone)).forEach(m => {
     const d = document.createElement("div");
-    d.className = "b " + (m.sender === phone ? "me" : "other"); d.textContent = m.text;
+    d.className = "b " + (m.sender === phone? "me" : "other"); d.textContent = m.text;
     const del = () => { if (confirm("Hapus pesan ini?")) deleteMessage(m.id).catch(() => alert("Gagal menghapus.")); };
     let timer; d.oncontextmenu = e => { e.preventDefault(); del(); };
     d.ontouchstart = () => { timer = setTimeout(del, 600); };
@@ -115,7 +140,7 @@ function renderMessages(msgs) {
   box.scrollTop = box.scrollHeight;
 }
 async function doSend() {
-  const t = $("msgInput").value; if (!t.trim() || !current || blockedNow) return;
+  const t = $("msgInput").value; if (!t.trim() ||!current || blockedNow) return;
   $("msgInput").value = ""; autoGrow();
   try { await sendMessage(phone, current.phone, t); } catch (e) { alert("Gagal kirim pesan."); }
   $("msgInput").focus();
@@ -123,18 +148,17 @@ async function doSend() {
 function autoGrow() { const t = $("msgInput"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 130) + "px"; }
 $("msgInput").addEventListener("input", autoGrow);
 $("msgInput").addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey && matchMedia("(pointer:fine)").matches) { e.preventDefault(); doSend(); }
+  if (e.key === "Enter" &&!e.shiftKey && matchMedia("(pointer:fine)").matches) { e.preventDefault(); doSend(); }
 });
 $("sendMsg").onmousedown = e => e.preventDefault();
 $("sendMsg").onclick = doSend;
 $("backBtn").onclick = closeChat;
-$("dotsBtn").onclick = e => { e.stopPropagation(); $("menu").hidden = !$("menu").hidden; };
+$("dotsBtn").onclick = e => { e.stopPropagation(); $("menu").hidden =!$("menu").hidden; };
 document.addEventListener("click", () => { $("menu").hidden = true; });
 $("mBlock").onclick = () => { const c = current; toggleBlock(phone, c.phone); openChat(c); };
 $("mClear").onclick = async () => { if (confirm("Hapus semua chat dengan kontak ini?")) { try { await clearChat(phone, current.phone); } catch (e) { alert("Gagal menghapus chat."); } } };
 $("mDel").onclick = () => { if (confirm("Hapus kontak ini?")) { removeContact(phone, current.phone); closeChat(); renderContacts(); } };
 
-/* Keyboard: samakan tinggi chat dengan visual viewport */
 function fitViewport() {
   const vv = window.visualViewport, ch = $("chat");
   if (!vv) return;
@@ -143,18 +167,18 @@ function fitViewport() {
 }
 if (window.visualViewport) { visualViewport.addEventListener("resize", fitViewport); visualViewport.addEventListener("scroll", fitViewport); }
 
-/* ---------- Tabs & Profile ---------- */
 function switchTab(t) {
   const chat = t === "chat";
-  $("tabChat").hidden = !chat; $("tabProfile").hidden = chat;
-  $("navChat").classList.toggle("active", chat); $("navProfile").classList.toggle("active", !chat);
-  $("addBtn").style.visibility = chat ? "visible" : "hidden";
+  $("tabChat").hidden =!chat; $("tabProfile").hidden = chat;
+  $("navChat").classList.toggle("active", chat); $("navProfile").classList.toggle("active",!chat);
+  $("addBtn").style.visibility = chat? "visible" : "hidden";
 }
 $("navChat").onclick = () => switchTab("chat");
 $("navProfile").onclick = () => switchTab("profile");
 
 function renderAvatar() {
   const img = LS.getItem("alyz_img_" + phone), a = $("avatarBtn");
+  if(!a) return;
   a.innerHTML = "";
   if (img) { const i = document.createElement("img"); i.src = img; a.appendChild(i); }
   else a.textContent = (LS.getItem("alyz_name_" + phone) || phone.slice(-2)).slice(0, 2).toUpperCase();
@@ -178,8 +202,11 @@ $("fileInput").onchange = e => {
 $("saveBtn").onclick = () => { LS.setItem("alyz_name_" + phone, $("nameInput").value.trim()); renderAvatar(); setMsg("profMsg", "Profile tersimpan."); };
 $("logoutBtn").onclick = async () => { await logout(); LS.removeItem("alyz_phone"); location.reload(); };
 
-/* ---------- Boot ---------- */
+/* ---------- Boot FIX ---------- */
 (async () => {
   if (phone) { try { await Promise.race([authReady(), new Promise(r => setTimeout(r, 3000))]); } catch (e) {} }
-  runSplash(false, () => (phone ? showHome() : showLogin()));
+  runSplash(false, () => {
+    if(phone) showHome();
+    else showLogin();
+  });
 })();
